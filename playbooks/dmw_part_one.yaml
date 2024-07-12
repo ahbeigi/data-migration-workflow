@@ -1,0 +1,27 @@
+---
+# dmw_part_one.yaml
+- name: Part one
+  hosts: useast
+  tasks:
+    - name: Part one 
+      block:
+        - name: Part one
+          import_role:
+            name: data_migrate
+            tasks_from: part_one
+      rescue:
+        - name: Set the request status to Failed
+          import_role:
+            name: request_status
+          delegate_to: localhost
+          vars:
+            ticket_status: 'failed'
+
+- name: Set the ticket status as Completed
+  hosts: localhost_group
+  tasks:
+    - name: Set the ticket status as Completed
+      import_role:
+        name: ticket_status
+      vars:
+        sfdc_ticket_status: 'completed'

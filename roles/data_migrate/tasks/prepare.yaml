@@ -1,0 +1,14 @@
+---
+- name: Copy backup package to destination backend host
+  win_copy:
+    src: '{{ backup_source_path }}\{{ package_filename }}'
+    dest: '{{ data_migration_package_local_path }}\{{ local_package_password_protected_filename }}'
+    remote_src: yes
+
+- name: Disable Scheduled tasks in ProERP
+  script: "ScheduledTasks.ps1"
+  environment:
+    CLI_EXECUTABLE: "{{ cli_executable }}"
+    SCHEDULED_TASKS_JSON: "{{ scheduled_tasks | to_json }}"
+    MODE: "pre_rollout"
+  register: out01

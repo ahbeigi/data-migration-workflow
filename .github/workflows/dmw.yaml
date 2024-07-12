@@ -1,0 +1,88 @@
+name: Data Migration Workflow
+
+on:
+  repository_dispatch:
+    types: [run-ansible-playbooks]
+
+env:
+  SRC_BACKEND: ${{ github.event.client_payload.src_backend }}
+  DST_BACKEND: ${{ github.event.client_payload.dst_backend }}
+  DST_FRONTEND: ${{ github.event.client_payload.dst_frontend }}
+  MAINTENANCE_START_TIME: ${{ github.event.client_payload.maintenance_start_time }}
+  DATACENTER: ${{ github.event.client_payload.datacenter }}
+  ANSIBLE_USER: ${{ secrets.ANSIBLE_USER }}
+  ANSIBLE_PASSWORD: ${{ secrets.ANSIBLE_PASSWORD }}
+
+jobs:
+  run_playbooks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Build inventory file
+        run: |
+          cat <<EOF > inventory.yaml
+              $DATACENTER:
+                hosts:
+                  src_backend:
+                    ansible_host: $SRC_BACKEND
+                    ansible_user: "{{ lookup('env', 'ANSIBLE_USER') }}"
+                    ansible_password: "{{ lookup('env', 'ANSIBLE_PASSWORD') }}"
+                  dst_backend:
+                    ansible_host: $DST_BACKEND
+                    ansible_user: "{{ lookup('env', 'ANSIBLE_USER') }}"
+                    ansible_password: "{{ lookup('env', 'ANSIBLE_PASSWORD') }}"
+                  dst_frontend:
+                    ansible_host: $DST_FRONTEND
+                    ansible_user: "{{ lookup('env', 'ANSIBLE_USER') }}"
+                    ansible_password: "{{ lookup('env', 'ANSIBLE_PASSWORD') }}"
+                vars:
+                  ansible_port: 5985
+                  ansible_connection: winrm
+                  ansible_winrm_server_cert_validation: ignore
+                  ansible_winrm_transport: ntlm
+
+              localhost:
+                hosts:
+                  localhost:
+                    ansible_connection: local
+          EOF
+          cat inventory.yaml
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible pywinrm
+
+      - name: Run part_one playbook
+        run: |
+          ansible-playbook playbooks/part_one.yaml -i inventory.yaml
+        env:
+          ANSIBLE_USER: ${{ env.ANSIBLE_USER }}
+          ANSIBLE_PASSWORD: ${{ env.ANSIBLE_PASSWORD }}
+
+      - name: Wait until maintenance start time
+        run: |
+          current_time=$(date +%s)
+          maintenance_start_time=$(date -d "${{ env.MAINTENANCE_START_TIME }}" +%s)
+          wait_time=$((maintenance_start_time - current_time))
+          echo "wait for: ${wait_time}"
+          if [ $wait_time -gt 0 ]; then
+            echo "Waiting for $wait_time seconds..."
+            sleep 5
+          else
+            echo "Maintenance start time has already passed."
+          fi
+
+      - name: Run part_two playbook
+        run: |
+          ansible-playbook playbooks/part_two.yaml -i inventory.yaml
+        env:
+          ANSIBLE_USER: ${{ env.ANSIBLE_USER }}
+          ANSIBLE_PASSWORD: ${{ env.ANSIBLE_PASSWORD }}

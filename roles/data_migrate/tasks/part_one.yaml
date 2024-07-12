@@ -1,0 +1,12 @@
+---
+# part_one.yaml
+- name: Include prepare steps
+  include_tasks: prepare.yaml
+
+- block:
+  - name: Pre-requisite checks and preparations
+    include_tasks: pre_requisites.yaml
+
+  - name: Copy backup package to local disk
+    include_tasks: copy_backup_package.yaml
+  when: inventory_hostname == 'dst_backend'

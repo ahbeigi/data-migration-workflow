@@ -1,0 +1,5 @@
+{% set crlf = '\r\n' %}
+Type  Id  Value Comments  Copyright{{ crlf }}
+{%- for row in xml_rows %}
+{{ row['Type'] }} {{ row['Id'] }} {{ row['Value'] }}  {{ row['Comments'] }}{{ crlf }}
+{%- endfor %}
