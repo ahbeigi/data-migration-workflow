@@ -1,12 +1,13 @@
 ---
 # part_one.yaml
 - name: Include prepare steps
-  include_tasks: prepare.yaml
+  ansible.builtin.include_tasks: prepare.yaml
 
-- block:
-  - name: Pre-requisite checks and preparations
-    include_tasks: pre_requisites.yaml
-
-  - name: Copy backup package to local disk
-    include_tasks: copy_backup_package.yaml
+- name: Run on dst_backend
   when: inventory_hostname == 'dst_backend'
+  block:
+    - name: Pre-requisite checks and preparations
+      ansible.builtin.include_tasks: pre_requisites.yaml
+
+    - name: Copy backup package to local disk
+      ansible.builtin.include_tasks: copy_backup_package.yaml

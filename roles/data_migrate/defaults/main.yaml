@@ -1,4 +1,4 @@
 ---
-workdir_prefix: 'C:\Temp\ansibledeploy'
-data_migration_package_local_path: '{{ workdir_prefix }}\data_migration'
-local_package_password_protected_filename: 'backup_package.password_protected.zip'
+data_migrate_workdir_prefix: 'C:\Temp\ansibledeploy'
+data_migrate_package_local_path: '{{ data_migrate_workdir_prefix }}\data_migrate'
+data_migrate_local_package_password_protected_filename: 'backup_package.password_protected.zip'

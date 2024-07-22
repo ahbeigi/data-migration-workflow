@@ -43,7 +43,7 @@ jobs:
                   ansible_winrm_server_cert_validation: ignore
                   ansible_winrm_transport: ntlm
 
-              localhost:
+              localhost_group:
                 hosts:
                   localhost:
                     ansible_connection: local
